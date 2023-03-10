@@ -15,14 +15,17 @@
 
 #include "create_polytope.h"
 #include "ode_solvers/ode_solvers.hpp"
+#include "probabilistic_programming.h"
 #include "random_walks/random_walks.hpp"
+#include "runtime_data.h"
 
-#define DEBUG
+// #define DEBUG
 
-// HMCFunctor's code is attributed to the following source files in volesti's
-// project directory: (i) volesti/examples/logconcave/simple_hmc.cpp and (ii)
+// HMCFunctor_function_pointer_interface's code is attributed to the following
+// source files in volesti's project directory: (i)
+// volesti/examples/logconcave/simple_hmc.cpp and (ii)
 // volesti/R-proj/src/oracle_functors_rcpp.h.
-struct HMCFunctor {
+struct HMCFunctor_function_pointer_interface {
   template <typename NT>
   struct parameters {
     unsigned int dim;    // Dimension
@@ -34,7 +37,7 @@ struct HMCFunctor {
     parameters(unsigned int dim_, NT L_, NT m_)
         // The value of kappa is set to L / m in
         // R-proj/src/oracle_functors_rcpp.h, so I adopt the same definition.
-        : dim(dim_), order(2), L(L_), m(m_), kappa(L_ / m_){}
+        : dim(dim_), order(2), L(L_), m(m_), kappa(L_ / m_) {}
   };
 
   // Functor representing the negative log pdf of the prior probability
@@ -54,7 +57,7 @@ struct HMCFunctor {
     (const NT *);
 
     FunctionFunctor(parameters<NT> &params_, NT (*neg_log_pdf_)(const NT *))
-        : params(params_), neg_log_pdf(neg_log_pdf_){}
+        : params(params_), neg_log_pdf(neg_log_pdf_) {}
 
     // The index i represents the state vector index
     NT operator()(Point const &x) const {
@@ -81,7 +84,7 @@ struct HMCFunctor {
 
     GradientFunctor(parameters<NT> &params_,
                     NT *(*gradient_log_pdf_)(const NT *))
-        : params(params_), gradient_log_pdf(gradient_log_pdf_){}
+        : params(params_), gradient_log_pdf(gradient_log_pdf_) {}
 
     // The index i represents the state vector index
     Point operator()(unsigned int const &i, pts const &xs, NT const &t) const {
@@ -105,12 +108,80 @@ struct HMCFunctor {
   };
 };
 
-double *run_hmc(unsigned int const num_rows, unsigned int const num_cols,
-                double *coefficients_A, double *coefficients_b, double const L,
-                double const m, unsigned int const num_samples,
-                unsigned int const walk_length, double const step_size,
-                double *starting_point, double (*neg_log_pdf)(const double *),
-                double *(*gradient_log_pdf)(const double *)) {
+struct HMCFunctor_probability_distribution_interface {
+  template <typename NT>
+  struct parameters {
+    unsigned int dim;    // Dimension
+    unsigned int order;  // For HMC, the order is 2
+    NT L;                // Lipschitz constant for gradient
+    NT m;                // Strong convexity constant
+    NT kappa;            // Condition number
+
+    parameters(unsigned int dim_, NT L_, NT m_)
+        // The value of kappa is set to L / m in
+        // R-proj/src/oracle_functors_rcpp.h, so I adopt the same definition.
+        : dim(dim_), order(2), L(L_), m(m_), kappa(L_ / m_) {}
+  };
+
+  // Functor representing the negative log pdf of the prior probability
+  // distribution in Bayesian inference.
+  template <typename Point>
+  struct FunctionFunctor {
+    typedef typename Point::FT NT;
+
+    parameters<NT> &params;
+
+    // A struct capturing the runtime data
+    probability_distribution_statistical_aara &probability_distribution;
+
+    FunctionFunctor(
+        parameters<NT> &params_,
+        probability_distribution_statistical_aara &probability_distribution_)
+        : params(params_),
+          probability_distribution(probability_distribution_) {}
+
+    // The index i represents the state vector index
+    NT operator()(Point const &x) const {
+      return probability_distribution.log_pdf_point_interface(x);
+    }
+  };
+
+  // Functor representing the gradient of the (positive) log pdf of the prior
+  // distribution.
+  template <typename Point>
+  struct GradientFunctor {
+    typedef typename Point::FT NT;
+    typedef std::vector<Point> pts;
+
+    parameters<NT> &params;
+
+    // A struct capturing the runtime data
+    probability_distribution_statistical_aara &probability_distribution;
+
+    GradientFunctor(
+        parameters<NT> &params_,
+        probability_distribution_statistical_aara &probability_distribution_)
+        : params(params_),
+          probability_distribution(probability_distribution_) {}
+
+    // The index i represents the state vector index
+    Point operator()(unsigned int const &i, pts const &xs, NT const &t) const {
+      if (i == params.order - 1) {
+        return probability_distribution.gradient_log_pdf_point_interface(xs[0]);
+      } else {
+        return xs[i + 1];  // returns velocity (i.e. the derivative of x)
+      }
+    }
+  };
+};
+
+template <typename NegativeLogPDFunctor, typename GradientFunctor>
+double *hmc_core(unsigned int const num_rows, unsigned int const num_cols,
+                 double *coefficients_A, double *coefficients_b, double const L,
+                 double const m, unsigned int const num_samples,
+                 unsigned int const walk_length, double const step_size,
+                 double *starting_point, NegativeLogPDFunctor f,
+                 GradientFunctor F) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
@@ -131,14 +202,6 @@ double *run_hmc(unsigned int const num_rows, unsigned int const num_cols,
   std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
   if (InnerBall.second < 0.0)
     throw std::invalid_argument("The linear program is infeasible");
-
-  // Define functors for the negative log pdf and the gradient of the (positive)
-  // log pdf
-  typedef HMCFunctor::FunctionFunctor<Point> NegativeLogprobFunctor;
-  typedef HMCFunctor::GradientFunctor<Point> GradientFunctor;
-  HMCFunctor::parameters<NT> params(dim, L, m);
-  NegativeLogprobFunctor f(params, neg_log_pdf);
-  GradientFunctor F(params, gradient_log_pdf);
 
   // Define a starting point
   Point x0(dim);
@@ -173,8 +236,7 @@ double *run_hmc(unsigned int const num_rows, unsigned int const num_cols,
   hmc_params.eta = step_size;
   typedef LeapfrogODESolver<Point, NT, Hpolytope, GradientFunctor> Solver;
   HamiltonianMonteCarloWalk::Walk<Point, Hpolytope, RandomNumberGenerator,
-                                  GradientFunctor, NegativeLogprobFunctor,
-                                  Solver>
+                                  GradientFunctor, NegativeLogPDFunctor, Solver>
       hmc_walk(&P, x0, F, f, hmc_params);
 
   // hmc.disable_adaptive();
@@ -205,4 +267,64 @@ double *run_hmc(unsigned int const num_rows, unsigned int const num_cols,
 #endif
 
   return array_samples;
+}
+
+double *hmc_function_pointer_interface(
+    unsigned int const num_rows, unsigned int const num_cols,
+    double *coefficients_A, double *coefficients_b, double const L,
+    double const m, unsigned int const num_samples,
+    unsigned int const walk_length, double const step_size,
+    double *starting_point, double (*neg_log_pdf)(const double *),
+    double *(*gradient_log_pdf)(const double *)) {
+  typedef double NT;
+  typedef Cartesian<NT> Kernel;
+  typedef typename Kernel::Point Point;
+
+  unsigned int dim = num_cols;
+
+  // Define functors for the negative log pdf and the gradient of the (positive)
+  // log pdf
+  typedef HMCFunctor_function_pointer_interface::FunctionFunctor<Point>
+      NegativeLogPDFFunctor;
+  typedef HMCFunctor_function_pointer_interface::GradientFunctor<Point>
+      GradientFunctor;
+  HMCFunctor_function_pointer_interface::parameters<NT> params(dim, L, m);
+  NegativeLogPDFFunctor f(params, neg_log_pdf);
+  GradientFunctor F(params, gradient_log_pdf);
+
+  return hmc_core<NegativeLogPDFFunctor, GradientFunctor>(
+      num_rows, num_cols, coefficients_A, coefficients_b, L, m, num_samples,
+      walk_length, step_size, starting_point, f, F);
+}
+
+double *hmc_runtime_data_interface(
+    unsigned int const num_rows, unsigned int const num_cols,
+    double *coefficients_A, double *coefficients_b, double const L,
+    double const m, unsigned int const num_samples_drawn,
+    unsigned int const walk_length, double const step_size,
+    double *starting_point, runtime_data_sample *runtime_data,
+    unsigned int const num_samples_in_runtime_data) {
+  typedef double NT;
+  typedef Cartesian<NT> Kernel;
+  typedef typename Kernel::Point Point;
+
+  unsigned int dim = num_cols;
+
+  probability_distribution_statistical_aara probability_distribution{
+      runtime_data, num_samples_in_runtime_data, dim};
+
+  // Define functors for the negative log pdf and the gradient of the (positive)
+  // log pdf
+  typedef HMCFunctor_probability_distribution_interface::FunctionFunctor<Point>
+      NegativeLogPDFFunctor;
+  typedef HMCFunctor_probability_distribution_interface::GradientFunctor<Point>
+      GradientFunctor;
+  HMCFunctor_probability_distribution_interface::parameters<NT> params(dim, L,
+                                                                       m);
+  NegativeLogPDFFunctor f(params, probability_distribution);
+  GradientFunctor F(params, probability_distribution);
+
+  return hmc_core<NegativeLogPDFFunctor, GradientFunctor>(
+      num_rows, num_cols, coefficients_A, coefficients_b, L, m,
+      num_samples_drawn, walk_length, step_size, starting_point, f, F);
 }

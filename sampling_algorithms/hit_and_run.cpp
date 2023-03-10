@@ -5,11 +5,10 @@
 #include "create_polytope.h"
 #include "random_walks/random_walks.hpp"
 
-double *run_gaussian_rdhr(unsigned int const num_rows,
-                          unsigned int const num_cols, double *coefficients_A,
-                          double *coefficients_b, double const variance,
-                          unsigned int const num_samples,
-                          unsigned int const walk_length) {
+double *gaussian_rdhr(unsigned int const num_rows, unsigned int const num_cols,
+                      double *coefficients_A, double *coefficients_b,
+                      double const variance, unsigned int const num_samples,
+                      unsigned int const walk_length) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
@@ -50,7 +49,7 @@ double *run_gaussian_rdhr(unsigned int const num_rows,
   // probability. As a result, the apply function of Gaussian RDHR may never
   // terminates. This happens, for example, when we use the variance of 1.0 in
   // the Gaussian RDHR for warmup in the pure Bayesian resource analysis of the
-  // append function. 
+  // append function.
   for (int i = 0; i < num_samples; i++) {
     gaussian_rdhr_walk.apply(P, x, 1 / (2 * variance), walk_length, rng);
     const typename Point::Coeff sample = x.getCoefficients();
@@ -62,10 +61,10 @@ double *run_gaussian_rdhr(unsigned int const num_rows,
   return array_samples;
 }
 
-double *run_uniform_rdhr(unsigned int const num_rows,
-                         unsigned int const num_cols, double *coefficients_A,
-                         double *coefficients_b, unsigned int const num_samples,
-                         unsigned int const walk_length) {
+double *uniform_rdhr(unsigned int const num_rows, unsigned int const num_cols,
+                     double *coefficients_A, double *coefficients_b,
+                     unsigned int const num_samples,
+                     unsigned int const walk_length) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;

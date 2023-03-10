@@ -47,7 +47,7 @@ double *create_b() {
   return b;
 }
 
-void hmc() {
+void hmc_for_testing() {
   unsigned int num_rows = 6;
   unsigned int num_cols = 2;
   double *A = create_A();
@@ -63,10 +63,10 @@ void hmc() {
   starting_point[0] = 0.9;
   starting_point[1] = 0.9;
 
-  double *array_samples =
-      run_hmc(num_rows, num_cols, A, b, L, m, num_samples, walk_length,
-              step_size, starting_point, uniform_distribution_neg_log_prob,
-              uniform_distribution_gradient);
+  double *array_samples = hmc_function_pointer_interface(
+      num_rows, num_cols, A, b, L, m, num_samples, walk_length, step_size,
+      starting_point, uniform_distribution_neg_log_prob,
+      uniform_distribution_gradient);
 
   unsigned int num_burns = num_samples / 2;
   unsigned int num_samples_after_burns = num_samples - num_burns;
@@ -87,7 +87,7 @@ void hmc() {
   delete[] starting_point;
 }
 
-void gaussian_rdhr() {
+void gaussian_rdhr_for_testing() {
   unsigned int num_rows = 6;
   unsigned int num_cols = 2;
   double *A = create_A();
@@ -97,8 +97,8 @@ void gaussian_rdhr() {
   unsigned int num_samples = 200;
   unsigned int walk_length = 150;
 
-  double *array_samples = run_gaussian_rdhr(num_rows, num_cols, A, b, variance,
-                                            num_samples, walk_length);
+  double *array_samples = gaussian_rdhr(num_rows, num_cols, A, b, variance,
+                                        num_samples, walk_length);
 
   // Print the samples stored in array_samples
   std::cout << "Result of Gaussian RDHR" << std::endl;
@@ -115,7 +115,7 @@ void gaussian_rdhr() {
   delete[] b;
 }
 
-void uniform_rdhr() {
+void uniform_rdhr_for_testing() {
   unsigned int num_rows = 6;
   unsigned int num_cols = 2;
   double *A = create_A();
@@ -125,7 +125,7 @@ void uniform_rdhr() {
   unsigned int walk_length = 150;
 
   double *array_samples =
-      run_uniform_rdhr(num_rows, num_cols, A, b, num_samples, walk_length);
+      uniform_rdhr(num_rows, num_cols, A, b, num_samples, walk_length);
 
   // Print the samples stored in array_samples
   std::cout << "Result of uniform RDHR" << std::endl;
@@ -143,11 +143,11 @@ void uniform_rdhr() {
 }
 
 int main() {
-  // hmc();
-  // gaussian_rdhr();
-  // uniform_rdhr();
+  hmc_for_testing();
+  // gaussian_rdhr_for_testing();
+  // uniform_rdhr_for_testing();
 
-  test_automatic_differentiation();
+  // test_automatic_differentiation();
 
   return 0;
 }

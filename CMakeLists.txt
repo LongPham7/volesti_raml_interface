@@ -104,7 +104,7 @@ else ()
   # add_executable(sample sample.c)
   set_property(TARGET sample PROPERTY CXX_STANDARD 17) # enable C++17 standard
 
-  target_link_libraries(logconcave_hmc ${LP_SOLVE} ${BLAS} ${MKL_LINK})
+  target_link_libraries(logconcave_hmc probabilistic_programming ${LP_SOLVE} ${BLAS} ${MKL_LINK})
   target_link_libraries(hit_and_run ${LP_SOLVE} ${BLAS} ${MKL_LINK})
   target_link_libraries(sample logconcave_hmc hit_and_run runtime_data probabilistic_programming)
   

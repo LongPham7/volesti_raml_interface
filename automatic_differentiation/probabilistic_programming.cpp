@@ -14,7 +14,8 @@ using namespace autodiff;
 
 probability_distribution_statistical_aara::
     probability_distribution_statistical_aara(
-        runtime_data_sample *runtime_data_, int num_samples_, int dim_)
+        runtime_data_sample *runtime_data_, unsigned int num_samples_,
+        unsigned int dim_)
     : runtime_data(runtime_data_), num_samples(num_samples_), dim(dim_) {}
 
 var probability_distribution_statistical_aara::coefficient_log_pdf(
@@ -89,7 +90,7 @@ Eigen::VectorXd probability_distribution_statistical_aara::gradient_log_pdf(
 }
 
 Point probability_distribution_statistical_aara::
-    gradient_log_pdf_point_interface(const Point &point_x) {
+    gradient_log_pdf_point_interface(Point point_x) {
   ArrayXvar x{point_x.getCoefficients()};
   Eigen::VectorXd dydx = gradient_log_pdf(x);
   Point point_dydx{dydx};
@@ -107,6 +108,6 @@ void test_automatic_differentiation() {
   var y = probability_distribution_for_testing.log_pdf(x);
   Eigen::VectorXd dydx =
       probability_distribution_for_testing.gradient_log_pdf(x);
-  std::cout << "y = " << y << std::endl;
-  std::cout << "dy/dx = \n" << dydx << std::endl;
+  std::cout << "Log pdf for testing: " << y << std::endl;
+  std::cout << "Log pdf's gradient for testing:\n" << dydx << std::endl;
 }

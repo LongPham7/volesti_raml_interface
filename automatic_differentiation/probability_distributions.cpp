@@ -9,7 +9,7 @@ using namespace autodiff;
 // log pdf.
 #define LOG_SQRT_TWO_PI 0.91893853320467267
 
-var weibull_log_pdf(var alpha, var sigma, var x) {
+var weibull_log_pdf(const var& alpha, const var& sigma, const var& x) {
   var negative_infinity = -std::numeric_limits<double>::infinity();
   var x_normalized = x / sigma;
   return condition(
@@ -20,7 +20,7 @@ var weibull_log_pdf(var alpha, var sigma, var x) {
                               (alpha - 1) * log(x_normalized))));
 }
 
-var gaussian_log_pdf(var mu, var sigma, var x) {
+var gaussian_log_pdf(const var& mu, const var& sigma, const var& x) {
   var x_normalized = x / sigma;
   return -(x_normalized * x_normalized / 2) - LOG_SQRT_TWO_PI - log(sigma);
 }

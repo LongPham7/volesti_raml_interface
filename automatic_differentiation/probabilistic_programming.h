@@ -17,18 +17,19 @@ typedef typename Kernel::Point Point;
 
 struct probability_distribution_statistical_aara {
   runtime_data_sample *runtime_data;
-  int num_samples;
-  int dim;
+  unsigned int num_samples;
+  unsigned int dim;
 
   probability_distribution_statistical_aara(runtime_data_sample *runtime_data_,
-                                            int num_samples_, int dim_);
+                                            unsigned int num_samples_,
+                                            unsigned int dim_);
 
   var coefficient_log_pdf(const ArrayXvar &x);
   var cost_gap_log_pdf(const ArrayXvar &x);
   var log_pdf(const ArrayXvar &x);
   double log_pdf_point_interface(const Point &point_x);
   Eigen::VectorXd gradient_log_pdf(ArrayXvar x);
-  Point gradient_log_pdf_point_interface(const Point &point_x);
+  Point gradient_log_pdf_point_interface(Point point_x);
 };
 
 void test_automatic_differentiation(void);
