@@ -2,6 +2,7 @@
 
 #include "hit_and_run.h"
 #include "logconcave_hmc.h"
+#include "probability_distributions.h"
 #include "probabilistic_programming.h"
 
 double uniform_distribution_neg_log_prob(const double *current_state) {
@@ -143,11 +144,12 @@ void uniform_rdhr_for_testing() {
 }
 
 int main() {
-  hmc_for_testing();
+  // hmc_for_testing();
   // gaussian_rdhr_for_testing();
   // uniform_rdhr_for_testing();
 
   // test_automatic_differentiation();
+  test_gumbel();
 
   return 0;
 }

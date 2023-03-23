@@ -32,7 +32,7 @@ var probability_distribution_statistical_aara::coefficient_log_pdf(
 var probability_distribution_statistical_aara::cost_gap_log_pdf(
     const ArrayXvar &x) {
   double alpha = 1;
-  double sigma = 6;
+  double sigma = 250;
   var cumulative_log_pdf = 0;
 
   for (auto i = 0; i != num_samples; i++) {
@@ -61,7 +61,7 @@ var probability_distribution_statistical_aara::cost_gap_log_pdf(
       array_output_potential[j] = x[index] * potential;
     }
 
-    var total_input_potential = x[0] + array_input_potential.sum();
+    var total_input_potential = array_input_potential.sum();
     var total_output_potential = array_output_potential.sum();
 
     cumulative_log_pdf += weibull_log_pdf(

@@ -39,15 +39,17 @@ runtime_data_sample* create_runtime_data_for_testing() {
   runtime_data_sample* runtime_data = new runtime_data_sample[5];
 
   for (auto i = 0; i != 5; i++) {
-    int* array_cindices = new int[2];
-    double* potential_of_cindices = new double[2];
-    array_cindices[0] = 1;
-    array_cindices[1] = 2;
-    potential_of_cindices[0] = i;
-    potential_of_cindices[1] = 5;
+    int* array_cindices = new int[3];
+    double* potential_of_cindices = new double[3];
+    array_cindices[0] = 0;
+    array_cindices[1] = 1;
+    array_cindices[2] = 2;
+    potential_of_cindices[0] = 1;
+    potential_of_cindices[1] = i;
+    potential_of_cindices[2] = 5;
 
     runtime_data_sample new_sample{
-        array_cindices, potential_of_cindices, 2, nullptr, nullptr, 0,
+        array_cindices, potential_of_cindices, 3, nullptr, nullptr, 0,
         (double)i};
     runtime_data[i] = new_sample;
   }

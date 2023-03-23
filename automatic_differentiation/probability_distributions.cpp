@@ -20,8 +20,13 @@ var weibull_log_pdf(const var& alpha, const var& sigma, const var& x) {
                               (alpha - 1) * log(x_normalized))));
 }
 
+var gumbel_log_pdf(const var& mu, const var& beta, const var& x) {
+  var x_normalized = (x - mu) / beta;
+  return -log(beta) - x_normalized - exp(-x_normalized);
+}
+
 var gaussian_log_pdf(const var& mu, const var& sigma, const var& x) {
-  var x_normalized = x / sigma;
+  var x_normalized = (x - mu) / sigma;
   return -(x_normalized * x_normalized / 2) - LOG_SQRT_TWO_PI - log(sigma);
 }
 
@@ -38,6 +43,20 @@ void test_weibull() {
   std::cout << "Log pdf gradient of Weibull(alpha = " << alpha
             << ", sigma = " << sigma << ") at x = " << x << ": " << pdf_gradient
             << std::endl;
+}
+
+// Sanity check of a Gumbel distribution
+void test_gumbel() {
+  var mu = 0;
+  var beta = 1;
+  var x = 1.1;
+  var y = gumbel_log_pdf(mu, beta, x);
+  auto [pdf_gradient] = derivatives(y, wrt(x));
+
+  std::cout << "Log pdf of Gumbel(mu = " << mu << ", beta = " << beta
+            << ") at x = " << x << ": " << y << std::endl;
+  std::cout << "Log pdf gradient of Gumbel(mu = " << mu << ", beta = " << beta
+            << ") at x = " << x << ": " << pdf_gradient << std::endl;
 }
 
 // Sanity check of a Gaussian distribution

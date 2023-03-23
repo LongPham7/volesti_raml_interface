@@ -142,7 +142,9 @@ struct HMCFunctor_probability_distribution_interface {
 
     // The index i represents the state vector index
     NT operator()(Point const &x) const {
-      return probability_distribution.log_pdf_point_interface(x);
+      // Note that we must negate the log pdf because Volesti requires the
+      // "negative" log pdf, instead of the positive one.
+      return (-1) * probability_distribution.log_pdf_point_interface(x);
     }
   };
 
@@ -197,6 +199,10 @@ double *hmc_core(unsigned int const num_rows, unsigned int const num_cols,
   Hpolytope P =
       create_polytope(num_rows, num_cols, coefficients_A, coefficients_b);
 
+#ifdef DEBUG
+  P.print();
+#endif
+
   // It is important to compute the inner ball of P. It normalizes P via the
   // normalize() function. Without this normalization, HMC does work properly.
   std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
@@ -215,21 +221,6 @@ double *hmc_core(unsigned int const num_rows, unsigned int const num_cols,
     throw std::invalid_argument(
         "The starting point is not in the interior of the polytope.");
   }
-
-#ifdef DEBUG
-  // Test neg_log_pdf and neg_gradient_log_pdf at the starting point
-  double neg_log_pdf_result = neg_log_pdf(starting_point);
-  double *gradient_log_pdf_result = gradient_log_pdf(starting_point);
-  Point gradient_log_pdf_result_point(dim);
-  for (auto i = 0; i != dim; i++) {
-    gradient_log_pdf_result_point.set_coord(i, gradient_log_pdf_result[i]);
-  }
-  std::cout << "Neg log pdf at the starting point: " << neg_log_pdf_result
-            << std::endl;
-  std::cout << "Gradient at the starting point: "
-            << gradient_log_pdf_result_point.getCoefficients().transpose()
-            << std::endl;
-#endif
 
   // Define HMC walk
   HamiltonianMonteCarloWalk::parameters<NT, GradientFunctor> hmc_params(F, dim);
@@ -292,6 +283,21 @@ double *hmc_function_pointer_interface(
   NegativeLogPDFFunctor f(params, neg_log_pdf);
   GradientFunctor F(params, gradient_log_pdf);
 
+#ifdef DEBUG
+  // Test neg_log_pdf and gradient_log_pdf at the starting point
+  double neg_log_pdf_result = neg_log_pdf(starting_point);
+  double *gradient_log_pdf_result = gradient_log_pdf(starting_point);
+  Point gradient_log_pdf_result_point(dim);
+  for (auto i = 0; i != dim; i++) {
+    gradient_log_pdf_result_point.set_coord(i, gradient_log_pdf_result[i]);
+  }
+  std::cout << "Neg log pdf at the starting point: " << neg_log_pdf_result
+            << std::endl;
+  std::cout << "Gradient at the starting point: "
+            << gradient_log_pdf_result_point.getCoefficients().transpose()
+            << std::endl;
+#endif
+
   return hmc_core<NegativeLogPDFFunctor, GradientFunctor>(
       num_rows, num_cols, coefficients_A, coefficients_b, L, m, num_samples,
       walk_length, step_size, starting_point, f, F);
@@ -323,6 +329,21 @@ double *hmc_runtime_data_interface(
                                                                        m);
   NegativeLogPDFFunctor f(params, probability_distribution);
   GradientFunctor F(params, probability_distribution);
+
+#ifdef DEBUG
+  // Test neg log pdf and positive log pdf's gradient at the starting point
+  Point x0(dim);
+  for (auto i = 0; i != dim; i++) {
+    x0.set_coord(i, starting_point[i]);
+  }
+
+  double log_pdf = probability_distribution.log_pdf_point_interface(x0);
+  Point gradient_log_pdf =
+      probability_distribution.gradient_log_pdf_point_interface(x0);
+  std::cout << "Log pdf at the starting point: " << log_pdf << std::endl;
+  std::cout << "Gradient of the log pdf at the starting point: "
+            << gradient_log_pdf.getCoefficients().transpose() << std::endl;
+#endif
 
   return hmc_core<NegativeLogPDFFunctor, GradientFunctor>(
       num_rows, num_cols, coefficients_A, coefficients_b, L, m,
