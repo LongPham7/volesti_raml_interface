@@ -1,8 +1,11 @@
 #include "probability_distributions.h"
 
+#include <string.h>
+
 #include <autodiff/reverse/var.hpp>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 using namespace autodiff;
 
 // Constant log (sqrt (2 * pi)). It is used in the calculation of the Gaussian
@@ -28,6 +31,41 @@ var gumbel_log_pdf(const var& mu, const var& beta, const var& x) {
 var gaussian_log_pdf(const var& mu, const var& sigma, const var& x) {
   var x_normalized = (x - mu) / sigma;
   return -(x_normalized * x_normalized / 2) - LOG_SQRT_TWO_PI - log(sigma);
+}
+
+var log_pdf_of_given_distribution(const distribution_type& distribution,
+                                  const var& x) {
+  distribution_name distribution_name = distribution.distribution_name;
+  double first_parameter = distribution.first_parameter;
+  double second_parameter = distribution.second_parameter;
+
+  if (distribution_name == Weibull) {
+    return weibull_log_pdf(first_parameter, second_parameter, x);
+  } else if (distribution_name == Gumbel) {
+    return gumbel_log_pdf(first_parameter, second_parameter, x);
+  } else if (distribution_name == Gaussian) {
+    return gaussian_log_pdf(first_parameter, second_parameter, x);
+  } else {
+    throw std::invalid_argument("The given distribution type is invalid.");
+  }
+}
+
+void print_distribution_type(distribution_type distribution) {
+  distribution_name distribution_name = distribution.distribution_name;
+  double first_parameter = distribution.first_parameter;
+  double second_parameter = distribution.second_parameter;
+  if (distribution_name == Weibull) {
+    std::cout << "Weibull(alpha = " << first_parameter
+              << ", sigma = " << second_parameter << ")";
+  } else if (distribution_name == Gumbel) {
+    std::cout << "Gumbel(mu = " << first_parameter
+              << ", beta = " << second_parameter << ")";
+  } else if (distribution_name == Gaussian) {
+    std::cout << "Gaussian(mu = " << first_parameter
+              << ", sigma = " << second_parameter << ")";
+  } else {
+    throw std::invalid_argument("The given distribution type is invalid.");
+  }
 }
 
 // Sanity check of a Weibull distribution

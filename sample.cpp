@@ -148,8 +148,8 @@ int main() {
   // gaussian_rdhr_for_testing();
   // uniform_rdhr_for_testing();
 
-  // test_automatic_differentiation();
-  test_gumbel();
+  // test_gumbel();
+  test_automatic_differentiation();
 
   return 0;
 }

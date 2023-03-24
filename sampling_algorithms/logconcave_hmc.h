@@ -1,6 +1,7 @@
 #ifndef LOGCONCAVE_HMC
 #define LOGCONCAVE_HMC
 
+#include "probability_distributions.h"
 #include "runtime_data.h"
 
 #ifdef __cplusplus
@@ -21,7 +22,8 @@ double *hmc_runtime_data_interface(
     double const m, unsigned int const num_samples,
     unsigned int const walk_length, double const step_size,
     double *starting_point, runtime_data_sample *runtime_data,
-    unsigned int const num_samples_in_runtime_data);
+    unsigned int const num_samples_in_runtime_data,
+    distribution_type coefficient_distribution, distribution_type cost_model);
 
 #ifdef __cplusplus
 }

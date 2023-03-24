@@ -15,24 +15,26 @@ using namespace autodiff;
 probability_distribution_statistical_aara::
     probability_distribution_statistical_aara(
         runtime_data_sample *runtime_data_, unsigned int num_samples_,
-        unsigned int dim_)
-    : runtime_data(runtime_data_), num_samples(num_samples_), dim(dim_) {}
+        unsigned int dim_, distribution_type coefficient_distribution_,
+        distribution_type cost_model_)
+    : runtime_data(runtime_data_),
+      num_samples(num_samples_),
+      dim(dim_),
+      coefficient_distribution(coefficient_distribution_),
+      cost_model(cost_model_) {}
 
 var probability_distribution_statistical_aara::coefficient_log_pdf(
     const ArrayXvar &x) {
-  double mu = 0;
-  double sigma = 0.2;
   var cumulative_log_pdf = 0;
   for (auto i = 0; i != x.rows(); i++) {
-    cumulative_log_pdf += gaussian_log_pdf(mu, sigma, x[i]);
+    cumulative_log_pdf +=
+        log_pdf_of_given_distribution(coefficient_distribution, x[i]);
   }
   return cumulative_log_pdf;
 }
 
 var probability_distribution_statistical_aara::cost_gap_log_pdf(
     const ArrayXvar &x) {
-  double alpha = 1;
-  double sigma = 250;
   var cumulative_log_pdf = 0;
 
   for (auto i = 0; i != num_samples; i++) {
@@ -64,8 +66,8 @@ var probability_distribution_statistical_aara::cost_gap_log_pdf(
     var total_input_potential = array_input_potential.sum();
     var total_output_potential = array_output_potential.sum();
 
-    cumulative_log_pdf += weibull_log_pdf(
-        alpha, sigma, total_input_potential - total_output_potential - cost);
+    cumulative_log_pdf += log_pdf_of_given_distribution(
+        cost_model, total_input_potential - total_output_potential - cost);
   }
   return cumulative_log_pdf;
 }
@@ -100,8 +102,11 @@ Point probability_distribution_statistical_aara::
 void test_automatic_differentiation() {
   runtime_data_sample *runtime_data_for_testing =
       create_runtime_data_for_testing();
+  distribution_type coefficient_distribution{Gaussian, 0, 0.2};
+  distribution_type cost_model{Weibull, 1, 6};
   probability_distribution_statistical_aara
-      probability_distribution_for_testing{runtime_data_for_testing, 5, 3};
+      probability_distribution_for_testing{
+          runtime_data_for_testing, 5, 3, coefficient_distribution, cost_model};
 
   ArrayXvar x(3);
   x << 0.01, 1.1, 0.1;

@@ -9,6 +9,7 @@
 #include <autodiff/reverse/var/eigen.hpp>
 using namespace autodiff;
 
+#include "probability_distributions.h"
 #include "runtime_data.h"
 
 typedef double NT;
@@ -19,10 +20,13 @@ struct probability_distribution_statistical_aara {
   runtime_data_sample *runtime_data;
   unsigned int num_samples;
   unsigned int dim;
+  distribution_type coefficient_distribution;
+  distribution_type cost_model;
 
-  probability_distribution_statistical_aara(runtime_data_sample *runtime_data_,
-                                            unsigned int num_samples_,
-                                            unsigned int dim_);
+  probability_distribution_statistical_aara(
+      runtime_data_sample *runtime_data_, unsigned int num_samples_,
+      unsigned int dim_, distribution_type coefficient_distribution_,
+      distribution_type cost_model_);
 
   var coefficient_log_pdf(const ArrayXvar &x);
   var cost_gap_log_pdf(const ArrayXvar &x);

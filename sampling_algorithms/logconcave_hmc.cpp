@@ -16,6 +16,7 @@
 #include "create_polytope.h"
 #include "ode_solvers/ode_solvers.hpp"
 #include "probabilistic_programming.h"
+#include "probability_distributions.h"
 #include "random_walks/random_walks.hpp"
 #include "runtime_data.h"
 
@@ -309,15 +310,26 @@ double *hmc_runtime_data_interface(
     double const m, unsigned int const num_samples_drawn,
     unsigned int const walk_length, double const step_size,
     double *starting_point, runtime_data_sample *runtime_data,
-    unsigned int const num_samples_in_runtime_data) {
+    unsigned int const num_samples_in_runtime_data,
+    distribution_type coefficient_distribution, distribution_type cost_model) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
 
   unsigned int dim = num_cols;
 
+#ifdef DEBUG
+  std::cout << "Coefficient distribution: ";
+  print_distribution_type(coefficient_distribution);
+  std::cout << std::endl;
+  std::cout << "Cost model: ";
+  print_distribution_type(cost_model);
+  std::cout << std::endl;
+#endif
+
   probability_distribution_statistical_aara probability_distribution{
-      runtime_data, num_samples_in_runtime_data, dim};
+      runtime_data, num_samples_in_runtime_data, dim, coefficient_distribution,
+      cost_model};
 
   // Define functors for the negative log pdf and the gradient of the (positive)
   // log pdf
