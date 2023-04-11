@@ -5,10 +5,10 @@
 void print_runtime_data_sample(const runtime_data_sample& sample) {
   int* array_cindices = sample.array_cindices;
   double* potential_of_cindices = sample.potential_of_cindices;
-  unsigned int num_cindices = sample.num_cindices;
+  int num_cindices = sample.num_cindices;
   int* array_indices = sample.array_indices;
   double* potential_of_indices = sample.potential_of_indices;
-  unsigned int num_indices = sample.num_indices;
+  int num_indices = sample.num_indices;
   double cost = sample.cost;
 
   std::cout << "Input potential: (index, potential) = ";
@@ -29,7 +29,7 @@ void print_runtime_data_sample(const runtime_data_sample& sample) {
 }
 
 void print_runtime_data(runtime_data_sample* runtime_data,
-                        unsigned int const num_samples) {
+                        int const num_samples) {
   for (auto i = 0; i != num_samples; i++) {
     print_runtime_data_sample(runtime_data[i]);
   }

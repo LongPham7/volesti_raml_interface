@@ -18,14 +18,14 @@ typedef typename Kernel::Point Point;
 
 struct probability_distribution_statistical_aara {
   runtime_data_sample *runtime_data;
-  unsigned int num_samples;
-  unsigned int dim;
+  int num_samples;
+  int dim;
   distribution_type coefficient_distribution;
   distribution_type cost_model;
 
   probability_distribution_statistical_aara(
-      runtime_data_sample *runtime_data_, unsigned int num_samples_,
-      unsigned int dim_, distribution_type coefficient_distribution_,
+      runtime_data_sample *runtime_data_, int num_samples_, int dim_,
+      distribution_type coefficient_distribution_,
       distribution_type cost_model_);
 
   var coefficient_log_pdf(const ArrayXvar &x);

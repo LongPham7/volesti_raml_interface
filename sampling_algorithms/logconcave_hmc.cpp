@@ -29,13 +29,13 @@
 struct HMCFunctor_function_pointer_interface {
   template <typename NT>
   struct parameters {
-    unsigned int dim;    // Dimension
-    unsigned int order;  // For HMC, the order is 2
-    NT L;                // Lipschitz constant for gradient
-    NT m;                // Strong convexity constant
-    NT kappa;            // Condition number
+    int dim;    // Dimension
+    int order;  // For HMC, the order is 2
+    NT L;       // Lipschitz constant for gradient
+    NT m;       // Strong convexity constant
+    NT kappa;   // Condition number
 
-    parameters(unsigned int dim_, NT L_, NT m_)
+    parameters(int dim_, NT L_, NT m_)
         // The value of kappa is set to L / m in
         // R-proj/src/oracle_functors_rcpp.h, so I adopt the same definition.
         : dim(dim_), order(2), L(L_), m(m_), kappa(L_ / m_) {}
@@ -88,7 +88,7 @@ struct HMCFunctor_function_pointer_interface {
         : params(params_), gradient_log_pdf(gradient_log_pdf_) {}
 
     // The index i represents the state vector index
-    Point operator()(unsigned int const &i, pts const &xs, NT const &t) const {
+    Point operator()(int const &i, pts const &xs, NT const &t) const {
       if (i == params.order - 1) {
         const NT *current_point_array = xs[0].getCoefficients().data();
         const NT *gradient_array = gradient_log_pdf(current_point_array);
@@ -112,13 +112,13 @@ struct HMCFunctor_function_pointer_interface {
 struct HMCFunctor_probability_distribution_interface {
   template <typename NT>
   struct parameters {
-    unsigned int dim;    // Dimension
-    unsigned int order;  // For HMC, the order is 2
-    NT L;                // Lipschitz constant for gradient
-    NT m;                // Strong convexity constant
-    NT kappa;            // Condition number
+    int dim;    // Dimension
+    int order;  // For HMC, the order is 2
+    NT L;       // Lipschitz constant for gradient
+    NT m;       // Strong convexity constant
+    NT kappa;   // Condition number
 
-    parameters(unsigned int dim_, NT L_, NT m_)
+    parameters(int dim_, NT L_, NT m_)
         // The value of kappa is set to L / m in
         // R-proj/src/oracle_functors_rcpp.h, so I adopt the same definition.
         : dim(dim_), order(2), L(L_), m(m_), kappa(L_ / m_) {}
@@ -168,7 +168,7 @@ struct HMCFunctor_probability_distribution_interface {
           probability_distribution(probability_distribution_) {}
 
     // The index i represents the state vector index
-    Point operator()(unsigned int const &i, pts const &xs, NT const &t) const {
+    Point operator()(int const &i, pts const &xs, NT const &t) const {
       if (i == params.order - 1) {
         return probability_distribution.gradient_log_pdf_point_interface(xs[0]);
       } else {
@@ -179,12 +179,11 @@ struct HMCFunctor_probability_distribution_interface {
 };
 
 template <typename NegativeLogPDFunctor, typename GradientFunctor>
-double *hmc_core(unsigned int const num_rows, unsigned int const num_cols,
-                 double *coefficients_A, double *coefficients_b, double const L,
-                 double const m, unsigned int const num_samples,
-                 unsigned int const walk_length, double const step_size,
-                 double *starting_point, NegativeLogPDFunctor f,
-                 GradientFunctor F) {
+double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
+                 double *coefficients_b, double const L, double const m,
+                 int const num_samples, int const walk_length,
+                 double const step_size, double *starting_point,
+                 NegativeLogPDFunctor f, GradientFunctor F) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
@@ -193,7 +192,7 @@ double *hmc_core(unsigned int const num_rows, unsigned int const num_cols,
   typedef typename Hpolytope::VT VT;
   typedef BoostRandomNumberGenerator<boost::mt19937, NT> RandomNumberGenerator;
 
-  unsigned int dim = num_cols;
+  int dim = num_cols;
   RandomNumberGenerator rng(dim);
 
   // Define a polytope
@@ -233,8 +232,8 @@ double *hmc_core(unsigned int const num_rows, unsigned int const num_cols,
 
   // hmc.disable_adaptive();
 
-  unsigned int num_burns = num_samples / 2;  // Half will be burned
-  unsigned int num_samples_after_burns = num_samples - num_burns;
+  int num_burns = num_samples / 2;  // Half will be burned
+  int num_samples_after_burns = num_samples - num_burns;
 
   // Samples drawn from the HMC sampler are stored in array_samples.
   double *array_samples = new double[num_samples_after_burns * dim];
@@ -262,17 +261,16 @@ double *hmc_core(unsigned int const num_rows, unsigned int const num_cols,
 }
 
 double *hmc_function_pointer_interface(
-    unsigned int const num_rows, unsigned int const num_cols,
-    double *coefficients_A, double *coefficients_b, double const L,
-    double const m, unsigned int const num_samples,
-    unsigned int const walk_length, double const step_size,
+    int const num_rows, int const num_cols, double *coefficients_A,
+    double *coefficients_b, double const L, double const m,
+    int const num_samples, int const walk_length, double const step_size,
     double *starting_point, double (*neg_log_pdf)(const double *),
     double *(*gradient_log_pdf)(const double *)) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
 
-  unsigned int dim = num_cols;
+  int dim = num_cols;
 
   // Define functors for the negative log pdf and the gradient of the (positive)
   // log pdf
@@ -305,18 +303,17 @@ double *hmc_function_pointer_interface(
 }
 
 double *hmc_runtime_data_interface(
-    unsigned int const num_rows, unsigned int const num_cols,
-    double *coefficients_A, double *coefficients_b, double const L,
-    double const m, unsigned int const num_samples_drawn,
-    unsigned int const walk_length, double const step_size,
+    int const num_rows, int const num_cols, double *coefficients_A,
+    double *coefficients_b, double const L, double const m,
+    int const num_samples_drawn, int const walk_length, double const step_size,
     double *starting_point, runtime_data_sample *runtime_data,
-    unsigned int const num_samples_in_runtime_data,
+    int const num_samples_in_runtime_data,
     distribution_type coefficient_distribution, distribution_type cost_model) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
 
-  unsigned int dim = num_cols;
+  int dim = num_cols;
 
 #ifdef DEBUG
   std::cout << "Coefficient distribution: ";

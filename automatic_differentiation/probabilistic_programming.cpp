@@ -14,8 +14,8 @@ using namespace autodiff;
 
 probability_distribution_statistical_aara::
     probability_distribution_statistical_aara(
-        runtime_data_sample *runtime_data_, unsigned int num_samples_,
-        unsigned int dim_, distribution_type coefficient_distribution_,
+        runtime_data_sample *runtime_data_, int num_samples_, int dim_,
+        distribution_type coefficient_distribution_,
         distribution_type cost_model_)
     : runtime_data(runtime_data_),
       num_samples(num_samples_),
@@ -32,6 +32,12 @@ var probability_distribution_statistical_aara::coefficient_log_pdf(
   }
   return cumulative_log_pdf;
 }
+
+// var probability_distribution_statistical_aara::coefficient_log_pdf(
+//     const ArrayXvar &x) {
+//   return log_pdf_of_given_distribution(coefficient_distribution,
+//                                        x.sum() / x.rows());
+// }
 
 var probability_distribution_statistical_aara::cost_gap_log_pdf(
     const ArrayXvar &x) {
@@ -72,8 +78,49 @@ var probability_distribution_statistical_aara::cost_gap_log_pdf(
   return cumulative_log_pdf;
 }
 
+// var probability_distribution_statistical_aara::cost_gap_log_pdf(
+//     const ArrayXvar &x) {
+//   var cumulative_cost_gaps = 0;
+
+//   for (auto i = 0; i != num_samples; i++) {
+//     const runtime_data_sample &current_sample{runtime_data[i]};
+//     const int *array_cindices = current_sample.array_cindices;
+//     const double *potential_of_cindices =
+//     current_sample.potential_of_cindices; const int num_cindices =
+//     current_sample.num_cindices;
+
+//     const int *array_indices = current_sample.array_indices;
+//     const double *potential_of_indices = current_sample.potential_of_indices;
+//     const int num_indices = current_sample.num_indices;
+
+//     const double cost = current_sample.cost;
+
+//     ArrayXvar array_input_potential(num_cindices);
+//     for (auto j = 0; j != num_cindices; j++) {
+//       int index = array_cindices[j];
+//       double potential = potential_of_cindices[j];
+//       array_input_potential[j] = x[index] * potential;
+//     }
+
+//     ArrayXvar array_output_potential(num_indices);
+//     for (auto j = 0; j != num_indices; j++) {
+//       int index = array_indices[j];
+//       double potential = potential_of_indices[j];
+//       array_output_potential[j] = x[index] * potential;
+//     }
+
+//     var total_input_potential = array_input_potential.sum();
+//     var total_output_potential = array_output_potential.sum();
+
+//     cumulative_cost_gaps +=
+//         total_input_potential - total_output_potential - cost;
+//   }
+//   return log_pdf_of_given_distribution(cost_model,
+//                                        cumulative_cost_gaps / num_samples);
+// }
+
 var probability_distribution_statistical_aara::log_pdf(const ArrayXvar &x) {
-  assert(x.rows() == dim);
+  // assert(x.rows() == dim);
   return coefficient_log_pdf(x) + cost_gap_log_pdf(x);
 }
 
@@ -86,7 +133,7 @@ double probability_distribution_statistical_aara::log_pdf_point_interface(
 
 Eigen::VectorXd probability_distribution_statistical_aara::gradient_log_pdf(
     ArrayXvar x) {
-  assert(x.rows() == dim);
+  // assert(x.rows() == dim);
   var y = log_pdf(x);
   return gradient(y, x);
 }

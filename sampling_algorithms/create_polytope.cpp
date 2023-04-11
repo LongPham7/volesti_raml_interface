@@ -13,7 +13,7 @@ typedef HPolytope<Point> Hpolytope;
 typedef typename Hpolytope::MT MT;
 typedef typename Hpolytope::VT VT;
 
-MT create_matrix_A(unsigned int const &num_rows, unsigned int const &num_cols,
+MT create_matrix_A(int const &num_rows, int const &num_cols,
                    double *coefficients) {
   MT A;
   A.resize(num_rows, num_cols);
@@ -26,7 +26,7 @@ MT create_matrix_A(unsigned int const &num_rows, unsigned int const &num_cols,
   return A;
 }
 
-VT create_vector_b(unsigned int const &size, double *coefficients) {
+VT create_vector_b(int const &size, double *coefficients) {
   VT b;
   b.resize(size);
   for (auto i = 0; i != size; i++) {
@@ -35,9 +35,8 @@ VT create_vector_b(unsigned int const &size, double *coefficients) {
   return b;
 }
 
-Hpolytope create_polytope(unsigned int const &num_rows,
-                          unsigned int const &num_cols, double *coefficients_A,
-                          double *coefficients_b) {
+Hpolytope create_polytope(int const &num_rows, int const &num_cols,
+                          double *coefficients_A, double *coefficients_b) {
   MT A = create_matrix_A(num_rows, num_cols, coefficients_A);
   VT b = create_vector_b(num_rows, coefficients_b);
   Hpolytope P(num_cols, A, b);

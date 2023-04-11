@@ -5,15 +5,14 @@
 extern "C" {
 #endif
 
-double *gaussian_rdhr(unsigned int const num_rows, unsigned int const num_cols,
+double *gaussian_rdhr(int const num_rows, int const num_cols,
                       double *coefficients_A, double *coefficients_b,
-                      double const variance, unsigned int const num_samples,
-                      unsigned int const walk_length);
+                      double const variance, int const num_samples,
+                      int const walk_length);
 
-double *uniform_rdhr(unsigned int const num_rows, unsigned int const num_cols,
+double *uniform_rdhr(int const num_rows, int const num_cols,
                      double *coefficients_A, double *coefficients_b,
-                     unsigned int const num_samples,
-                     unsigned int const walk_length);
+                     int const num_samples, int const walk_length);
 #ifdef __cplusplus
 }
 #endif

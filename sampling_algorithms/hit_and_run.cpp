@@ -5,17 +5,17 @@
 #include "create_polytope.h"
 #include "random_walks/random_walks.hpp"
 
-double *gaussian_rdhr(unsigned int const num_rows, unsigned int const num_cols,
+double *gaussian_rdhr(int const num_rows, int const num_cols,
                       double *coefficients_A, double *coefficients_b,
-                      double const variance, unsigned int const num_samples,
-                      unsigned int const walk_length) {
+                      double const variance, int const num_samples,
+                      int const walk_length) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
   typedef HPolytope<Point> Hpolytope;
   typedef BoostRandomNumberGenerator<boost::mt19937, NT> RandomNumberGenerator;
 
-  unsigned int dim = num_cols;
+  int dim = num_cols;
   RandomNumberGenerator rng(dim);
 
   // Define a polytope
@@ -61,17 +61,16 @@ double *gaussian_rdhr(unsigned int const num_rows, unsigned int const num_cols,
   return array_samples;
 }
 
-double *uniform_rdhr(unsigned int const num_rows, unsigned int const num_cols,
+double *uniform_rdhr(int const num_rows, int const num_cols,
                      double *coefficients_A, double *coefficients_b,
-                     unsigned int const num_samples,
-                     unsigned int const walk_length) {
+                     int const num_samples, int const walk_length) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
   typedef HPolytope<Point> Hpolytope;
   typedef BoostRandomNumberGenerator<boost::mt19937, NT> RandomNumberGenerator;
 
-  unsigned int dim = num_cols;
+  int dim = num_cols;
   RandomNumberGenerator rng(dim);
 
   // Define a polytope
