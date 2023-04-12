@@ -21,7 +21,9 @@ double *hmc_runtime_data_interface(
     int const num_samples, int const walk_length, double const step_size,
     double *starting_point, runtime_data_sample *runtime_data,
     int const num_samples_in_runtime_data,
-    distribution_type coefficient_distribution, distribution_type cost_model);
+    distribution_type coefficient_distribution, distribution_type cost_model,
+    distribution_target_type coefficient_distribution_target,
+    distribution_target_type cost_model_target);
 
 #ifdef __cplusplus
 }

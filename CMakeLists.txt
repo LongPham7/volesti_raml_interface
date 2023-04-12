@@ -86,6 +86,7 @@ else ()
 
   # add_definitions(${CMAKE_CXX_FLAGS} "-std=c++11")  # enable C++11 standard
   add_definitions(${CMAKE_CXX_FLAGS} "-O3")  # optimization of the compiler
+  # add_definitions(${CMAKE_CXX_FLAGS} "-O3 -g")  # Debug mode for perf report
   #add_definitions(${CXX_COVERAGE_COMPILE_FLAGS} "-lgsl")
   add_definitions(${CXX_COVERAGE_COMPILE_FLAGS} "-lm")
   add_definitions(${CXX_COVERAGE_COMPILE_FLAGS} "-ldl")
@@ -108,5 +109,4 @@ else ()
   target_link_libraries(hit_and_run ${LP_SOLVE} ${BLAS} ${MKL_LINK})
   target_link_libraries(sample logconcave_hmc hit_and_run runtime_data probabilistic_programming)
   
-
 endif()

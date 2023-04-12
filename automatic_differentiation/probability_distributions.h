@@ -9,6 +9,10 @@ extern "C" {
 #endif
 
 enum distribution_name { Weibull, Gumbel, Gaussian };
+enum distribution_target_type {
+  Individual_coefficients,
+  Average_of_coefficients
+};
 
 struct distribution_type {
   // We support Weibull, Gumbel, and Gaussian distributions.

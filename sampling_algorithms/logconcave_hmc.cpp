@@ -308,7 +308,9 @@ double *hmc_runtime_data_interface(
     int const num_samples_drawn, int const walk_length, double const step_size,
     double *starting_point, runtime_data_sample *runtime_data,
     int const num_samples_in_runtime_data,
-    distribution_type coefficient_distribution, distribution_type cost_model) {
+    distribution_type coefficient_distribution, distribution_type cost_model,
+    distribution_target_type coefficient_distribution_target,
+    distribution_target_type cost_model_target) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
   typedef typename Kernel::Point Point;
@@ -325,8 +327,13 @@ double *hmc_runtime_data_interface(
 #endif
 
   probability_distribution_statistical_aara probability_distribution{
-      runtime_data, num_samples_in_runtime_data, dim, coefficient_distribution,
-      cost_model};
+      runtime_data,
+      num_samples_in_runtime_data,
+      dim,
+      coefficient_distribution,
+      cost_model,
+      coefficient_distribution_target,
+      cost_model_target};
 
   // Define functors for the negative log pdf and the gradient of the (positive)
   // log pdf
