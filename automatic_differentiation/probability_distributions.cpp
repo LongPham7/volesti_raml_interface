@@ -50,7 +50,7 @@ var log_pdf_of_given_distribution(const distribution_type& distribution,
   }
 }
 
-void print_distribution_type(distribution_type distribution) {
+void print_distribution(distribution_type distribution) {
   distribution_name distribution_name = distribution.distribution_name;
   double first_parameter = distribution.first_parameter;
   double second_parameter = distribution.second_parameter;

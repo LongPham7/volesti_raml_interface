@@ -206,8 +206,9 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
   // It is important to compute the inner ball of P. It normalizes P via the
   // normalize() function. Without this normalization, HMC does work properly.
   std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
-  if (InnerBall.second < 0.0)
+  if (InnerBall.second < 0.0) {
     throw std::invalid_argument("The linear program is infeasible");
+  }
 
   // Define a starting point
   Point x0(dim);
@@ -219,7 +220,33 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
     std::cerr << "Starting point of reflective HMC: "
               << x0.getCoefficients().transpose() << std::endl;
     throw std::invalid_argument(
-        "The starting point is not in the interior of the polytope.");
+        "The starting point is not inside the polytope.");
+  }
+
+  int num_burns = num_samples / 2;  // Half will be burned
+  int num_samples_after_burns = num_samples - num_burns;
+
+  // If the Chebyshev ball's radius is too small (basically zero), it means P's
+  // feasible region has a strictly lower dimension than the full state space.
+  // One example is a linear program with an equality constraint between two LP
+  // variables. In such a case, reflecgive HMC (and other exploration-based
+  // sampling algorithms such as RDHR) won't work well, because it is very easy
+  // to accidentally exit P. Instead of running reflective HMC, we simply return
+  // the starting point.
+  double chebyshev_radius_epsilon = 0.0001;
+  if (InnerBall.second < chebyshev_radius_epsilon) {
+    std::cout << "The Chebyshev ball's radius is too small: "
+              << InnerBall.second << std::endl;
+    std::cout
+        << "So we return the Chebyshev center instead of running reflective HMC"
+        << std::endl;
+    double *array_samples = new double[num_samples * dim];
+    for (auto i = 0; i < num_samples_after_burns; i++) {
+      for (auto j = 0; j < dim; j++) {
+        array_samples[i * dim + j] = x0.getCoefficients()(j);
+      }
+    }
+    return array_samples;
   }
 
   // Define HMC walk
@@ -232,14 +259,11 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
 
   // hmc.disable_adaptive();
 
-  int num_burns = num_samples / 2;  // Half will be burned
-  int num_samples_after_burns = num_samples - num_burns;
-
   // Samples drawn from the HMC sampler are stored in array_samples.
   double *array_samples = new double[num_samples_after_burns * dim];
 
   // Perform HMC
-  for (int i = 0; i < num_samples; i++) {
+  for (auto i = 0; i < num_samples; i++) {
     hmc_walk.apply(rng, walk_length);
     if (i >= num_burns) {
       const typename Point::Coeff sample = hmc_walk.x.getCoefficients();

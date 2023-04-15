@@ -31,7 +31,7 @@ var gaussian_log_pdf(const var& mu, const var& sigma, const var& x);
 
 var log_pdf_of_given_distribution(const distribution_type& distribution,
                                   const var& x);
-void print_distribution_type(distribution_type distribution);
+void print_distribution(distribution_type distribution);
 
 void test_weibull(void);
 void test_gumbel(void);
