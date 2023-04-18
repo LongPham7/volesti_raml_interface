@@ -13,6 +13,7 @@ double *gaussian_rdhr(int const num_rows, int const num_cols,
 double *uniform_rdhr(int const num_rows, int const num_cols,
                      double *coefficients_A, double *coefficients_b,
                      int const num_samples, int const walk_length);
+
 #ifdef __cplusplus
 }
 #endif

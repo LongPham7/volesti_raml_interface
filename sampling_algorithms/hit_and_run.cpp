@@ -35,19 +35,18 @@ double *gaussian_rdhr(int const num_rows, int const num_cols,
   // the inner ball.
   Point x = InnerBall.first;
 #ifdef DEBUG
-  std::cout << "Chebyshev center of polytope P: "
+  std::cout << "Chebyshev center of polytope P in Gaussian RDHR: "
             << x.getCoefficients().transpose() << std::endl;
 #endif
 
   // If the Chebyshev ball's radius is too small (basically zero), it means P's
   // feasible region has a strictly lower dimension than the full state space.
-  // One example is a linear program with an equality constraint between two LP
-  // variables. In such a case, RDHR (and other exploration-based sampling
-  // algorithms such as reflective HMC) won't work well, because it is very easy
-  // to accidentally exit P. Instead of running RDHR, we simply return the
-  // Chebyshev center.
-  double chebyshev_radius_epsilon = 0.0001;
-  if (InnerBall.second < chebyshev_radius_epsilon) {
+  // Geometrically, the feasible region is flat. One example is a linear program
+  // with an equality constraint between two LP variables. In such a case,
+  // random-walk-based sampling algorithms (e.g. RDHR and reflective HMC) don't
+  // work well, because it is very easy to accidentally exit P. Instead of
+  // running RDHR, we simply return the Chebyshev center.
+  if (InnerBall.second < CHEBYSHEV_RADIUS_EPSILON) {
     std::cout << "The Chebyshev ball's radius is too small: "
               << InnerBall.second << std::endl;
     std::cout
@@ -127,19 +126,18 @@ double *uniform_rdhr(int const num_rows, int const num_cols,
   // the inner ball.
   Point x = InnerBall.first;
 #ifdef DEBUG
-  std::cout << "Chebyshev center of polytope P: "
+  std::cout << "Chebyshev center of polytope P in uniform RDHR: "
             << x.getCoefficients().transpose() << std::endl;
 #endif
 
   // If the Chebyshev ball's radius is too small (basically zero), it means P's
   // feasible region has a strictly lower dimension than the full state space.
-  // One example is a linear program with an equality constraint between two LP
-  // variables. In such a case, RDHR (and other exploration-based sampling
-  // algorithms such as reflective HMC) won't work well, because it is very easy
-  // to accidentally exit P. Instead of running RDHR, we simply return the
-  // Chebyshev center.
-  double chebyshev_radius_epsilon = 0.0001;
-  if (InnerBall.second < chebyshev_radius_epsilon) {
+  // Geometrically, the feasible region is flat. One example is a linear program
+  // with an equality constraint between two LP variables. In such a case,
+  // random-walk-based sampling algorithms (e.g. RDHR and reflective HMC) don't
+  // work well, because it is very easy to accidentally exit P. Instead of
+  // running RDHR, we simply return the Chebyshev center.
+  if (InnerBall.second < CHEBYSHEV_RADIUS_EPSILON) {
     std::cout << "The Chebyshev ball's radius is too small: "
               << InnerBall.second << std::endl;
     std::cout

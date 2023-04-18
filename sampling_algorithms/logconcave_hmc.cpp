@@ -210,6 +210,11 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
     throw std::invalid_argument("The linear program is infeasible");
   }
 
+#ifdef DEBUG
+  std::cout << "Chebyshev center of polytope P in reflective HMC: "
+            << InnerBall.first.getCoefficients().transpose() << std::endl;
+#endif
+
   // Define a starting point
   Point x0(dim);
   for (auto i = 0; i != dim; i++) {
@@ -228,17 +233,16 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
 
   // If the Chebyshev ball's radius is too small (basically zero), it means P's
   // feasible region has a strictly lower dimension than the full state space.
-  // One example is a linear program with an equality constraint between two LP
-  // variables. In such a case, reflecgive HMC (and other exploration-based
-  // sampling algorithms such as RDHR) won't work well, because it is very easy
-  // to accidentally exit P. Instead of running reflective HMC, we simply return
-  // the starting point.
-  double chebyshev_radius_epsilon = 0.0001;
-  if (InnerBall.second < chebyshev_radius_epsilon) {
+  // Geometrically, the feasible region is flat. One example is a linear program
+  // with an equality constraint between two LP variables. In such a case,
+  // random-walk-based sampling algorithms (e.g. RDHR and reflective HMC) don't
+  // work well, because it is very easy to accidentally exit P. Instead of
+  // running RDHR, we simply return the Chebyshev center.
+  if (InnerBall.second < CHEBYSHEV_RADIUS_EPSILON) {
     std::cout << "The Chebyshev ball's radius is too small: "
               << InnerBall.second << std::endl;
     std::cout
-        << "So we return the Chebyshev center instead of running reflective HMC"
+        << "So we return the starting point instead of running reflective HMC"
         << std::endl;
     double *array_samples = new double[num_samples * dim];
     for (auto i = 0; i < num_samples_after_burns; i++) {
