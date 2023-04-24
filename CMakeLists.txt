@@ -27,6 +27,11 @@ option(USE_MKL "Use MKL library to build eigen" ON)
 
 add_definitions(-DDISABLE_NLP_ORACLES)
 
+# Pass a debugging flag to Volesti. The debugging mdoe is useful for getting a
+# more detailed error message when the computation of the Chebyshev centers
+# fails.
+add_compile_definitions(VOLESTI_DEBUG)
+
 # include("${VOLESTIROOT}/external/cmake-files/Eigen.cmake")
 # GetEigen()
 

@@ -35,7 +35,7 @@ double *gaussian_rdhr(int const num_rows, int const num_cols,
   // the inner ball.
   Point x = InnerBall.first;
 #ifdef DEBUG
-  std::cout << "Chebyshev center of polytope P in Gaussian RDHR: "
+  std::cerr << "Chebyshev center of polytope P in Gaussian RDHR: "
             << x.getCoefficients().transpose() << std::endl;
 #endif
 
@@ -47,9 +47,9 @@ double *gaussian_rdhr(int const num_rows, int const num_cols,
   // work well, because it is very easy to accidentally exit P. Instead of
   // running RDHR, we simply return the Chebyshev center.
   if (InnerBall.second < CHEBYSHEV_RADIUS_EPSILON) {
-    std::cout << "The Chebyshev ball's radius is too small: "
+    std::cerr << "The Chebyshev ball's radius is too small: "
               << InnerBall.second << std::endl;
-    std::cout
+    std::cerr
         << "So we return the Chebyshev center instead of running Gaussian RDHR"
         << std::endl;
     double *array_samples = new double[num_samples * dim];
@@ -126,7 +126,7 @@ double *uniform_rdhr(int const num_rows, int const num_cols,
   // the inner ball.
   Point x = InnerBall.first;
 #ifdef DEBUG
-  std::cout << "Chebyshev center of polytope P in uniform RDHR: "
+  std::cerr << "Chebyshev center of polytope P in uniform RDHR: "
             << x.getCoefficients().transpose() << std::endl;
 #endif
 
@@ -138,9 +138,9 @@ double *uniform_rdhr(int const num_rows, int const num_cols,
   // work well, because it is very easy to accidentally exit P. Instead of
   // running RDHR, we simply return the Chebyshev center.
   if (InnerBall.second < CHEBYSHEV_RADIUS_EPSILON) {
-    std::cout << "The Chebyshev ball's radius is too small: "
+    std::cerr << "The Chebyshev ball's radius is too small: "
               << InnerBall.second << std::endl;
-    std::cout
+    std::cerr
         << "So we return the Chebyshev center instead of running uniform RDHR"
         << std::endl;
     double *array_samples = new double[num_samples * dim];

@@ -40,10 +40,6 @@ Hpolytope create_polytope(int const &num_rows, int const &num_cols,
   MT A = create_matrix_A(num_rows, num_cols, coefficients_A);
   VT b = create_vector_b(num_rows, coefficients_b);
   Hpolytope P(num_cols, A, b);
-#ifdef DEBUG
-  std::cerr << "Here is polytope P:";
-  P.print();
-#endif
   return P;
 }
 
@@ -57,7 +53,7 @@ double compute_chebyshev_radius(int const num_rows, int const num_cols,
     throw std::invalid_argument("The linear program is infeasible");
   }
 #ifdef DEBUG
-  std::cout << "Polytope P's Chebyshev raidus: " << InnerBall.second
+  std::cerr << "Polytope P's Chebyshev radius: " << InnerBall.second
             << std::endl;
 #endif
   return InnerBall.second;

@@ -211,7 +211,7 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
   }
 
 #ifdef DEBUG
-  std::cout << "Chebyshev center of polytope P in reflective HMC: "
+  std::cerr << "Chebyshev center of polytope P in reflective HMC: "
             << InnerBall.first.getCoefficients().transpose() << std::endl;
 #endif
 
@@ -239,9 +239,9 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
   // work well, because it is very easy to accidentally exit P. Instead of
   // running RDHR, we simply return the Chebyshev center.
   if (InnerBall.second < CHEBYSHEV_RADIUS_EPSILON) {
-    std::cout << "The Chebyshev ball's radius is too small: "
+    std::cerr << "The Chebyshev ball's radius is too small: "
               << InnerBall.second << std::endl;
-    std::cout
+    std::cerr
         << "So we return the starting point instead of running reflective HMC"
         << std::endl;
     double *array_samples = new double[num_samples * dim];
@@ -277,13 +277,11 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
     }
   }
 
-#ifdef DEBUG
   std::cerr << "Reflective HMC statistics:" << std::endl;
   std::cerr << "Step size (final): " << hmc_walk.solver->eta << std::endl;
   std::cerr << "Discard Ratio: " << hmc_walk.discard_ratio << std::endl;
   std::cerr << "Average Acceptance Log-prob: "
             << exp(hmc_walk.average_acceptance_log_prob) << std::endl;
-#endif
 
   return array_samples;
 }
@@ -347,10 +345,10 @@ double *hmc_runtime_data_interface(
 
 #ifdef DEBUG
   std::cout << "Coefficient distribution: ";
-  print_distribution_type(coefficient_distribution);
+  print_distribution(coefficient_distribution);
   std::cout << std::endl;
   std::cout << "Cost model: ";
-  print_distribution_type(cost_model);
+  print_distribution(cost_model);
   std::cout << std::endl;
 #endif
 
