@@ -207,7 +207,7 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
   // normalize() function. Without this normalization, HMC does work properly.
   std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
   if (InnerBall.second < 0.0) {
-    throw std::invalid_argument("The linear program is infeasible");
+    throw std::invalid_argument("The linear program is infeasible in hmc_core");
   }
 
 #ifdef DEBUG
@@ -266,9 +266,20 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
   // Samples drawn from the HMC sampler are stored in array_samples.
   double *array_samples = new double[num_samples_after_burns * dim];
 
+  int num_of_blocks_for_reports = 10;
+  int block_size_for_reports = num_samples / num_of_blocks_for_reports;
+
   // Perform HMC
   for (auto i = 0; i < num_samples; i++) {
     hmc_walk.apply(rng, walk_length);
+
+    // Report how many blocks of HMC iterations have been finished
+    if (i % block_size_for_reports == 0) {
+      std::cout << (i / block_size_for_reports) << " blocks out of "
+                << num_of_blocks_for_reports << " in HMC are finished"
+                << std::endl;
+    }
+
     if (i >= num_burns) {
       const typename Point::Coeff sample = hmc_walk.x.getCoefficients();
       for (auto j = 0; j != dim; j++) {

@@ -28,7 +28,8 @@ double *gaussian_rdhr(int const num_rows, int const num_cols,
   // P
   std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
   if (InnerBall.second < 0.0) {
-    throw std::invalid_argument("The linear program is infeasible");
+    throw std::invalid_argument(
+        "The linear program is infeasible in gaussian_rdhr");
   }
 
   // Point x, which tracks the current sample, is initialized to the center of
@@ -119,7 +120,8 @@ double *uniform_rdhr(int const num_rows, int const num_cols,
   // P
   std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
   if (InnerBall.second < 0.0) {
-    throw std::invalid_argument("The linear program is infeasible");
+    throw std::invalid_argument(
+        "The linear program is infeasible in uniform_rdhr");
   }
 
   // Point x, which tracks the current sample, is initialized to the center of

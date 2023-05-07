@@ -20,8 +20,20 @@ HPolytope<typename Cartesian<double>::Point> create_polytope(
 extern "C" {
 #endif
 
+int get_feasibility_status_of_lp(int const num_rows, int const num_cols,
+                                 double *coefficients_A,
+                                 double *coefficients_b);
+
 double compute_chebyshev_radius(int const num_rows, int const num_cols,
                                 double *coefficients_A, double *coefficients_b);
+
+int identify_first_implicit_equality_row_index_in_matrix(
+    int const num_rows, int const num_cols, double *coefficients_A,
+    double *coefficients_b);
+
+int *iteratively_perturb_vector_b(int const num_rows, int const num_cols,
+                                  double *coefficients_A,
+                                  double *coefficients_b);
 
 #ifdef __cplusplus
 }

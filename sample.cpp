@@ -2,8 +2,8 @@
 
 #include "hit_and_run.h"
 #include "logconcave_hmc.h"
-#include "probability_distributions.h"
 #include "probabilistic_programming.h"
+#include "probability_distributions.h"
 
 double uniform_distribution_neg_log_prob(const double *current_state) {
   return 0;
