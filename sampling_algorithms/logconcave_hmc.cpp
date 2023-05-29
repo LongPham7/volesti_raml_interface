@@ -109,6 +109,7 @@ struct HMCFunctor_function_pointer_interface {
   };
 };
 
+template <typename probability_distribution_type>
 struct HMCFunctor_probability_distribution_interface {
   template <typename NT>
   struct parameters {
@@ -133,11 +134,10 @@ struct HMCFunctor_probability_distribution_interface {
     parameters<NT> &params;
 
     // A struct capturing the runtime data
-    probability_distribution_statistical_aara &probability_distribution;
+    probability_distribution_type &probability_distribution;
 
-    FunctionFunctor(
-        parameters<NT> &params_,
-        probability_distribution_statistical_aara &probability_distribution_)
+    FunctionFunctor(parameters<NT> &params_,
+                    probability_distribution_type &probability_distribution_)
         : params(params_),
           probability_distribution(probability_distribution_) {}
 
@@ -159,11 +159,10 @@ struct HMCFunctor_probability_distribution_interface {
     parameters<NT> &params;
 
     // A struct capturing the runtime data
-    probability_distribution_statistical_aara &probability_distribution;
+    probability_distribution_type &probability_distribution;
 
-    GradientFunctor(
-        parameters<NT> &params_,
-        probability_distribution_statistical_aara &probability_distribution_)
+    GradientFunctor(parameters<NT> &params_,
+                    probability_distribution_type &probability_distribution_)
         : params(params_),
           probability_distribution(probability_distribution_) {}
 
@@ -261,13 +260,17 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
                                   GradientFunctor, NegativeLogPDFunctor, Solver>
       hmc_walk(&P, x0, F, f, hmc_params);
 
-  // hmc.disable_adaptive();
+#ifdef DEBUG
+  hmc_walk.disable_adaptive();
+#endif
 
   // Samples drawn from the HMC sampler are stored in array_samples.
   double *array_samples = new double[num_samples_after_burns * dim];
 
   int num_of_blocks_for_reports = 10;
-  int block_size_for_reports = num_samples / num_of_blocks_for_reports;
+  int block_size_for_reports = (num_samples >= num_of_blocks_for_reports)
+                                   ? (num_samples / num_of_blocks_for_reports)
+                                   : 1;
 
   // Perform HMC
   for (auto i = 0; i < num_samples; i++) {
@@ -286,6 +289,8 @@ double *hmc_core(int const num_rows, int const num_cols, double *coefficients_A,
         array_samples[(i - num_burns) * dim + j] = sample(j);
       }
     }
+
+    // print_sample(num_cols, hmc_walk.x.getCoefficients());
   }
 
   std::cerr << "Reflective HMC statistics:" << std::endl;
@@ -346,7 +351,7 @@ double *hmc_runtime_data_interface(
     double *starting_point, runtime_data_sample *runtime_data,
     int const num_samples_in_runtime_data,
     distribution_type coefficient_distribution, distribution_type cost_model,
-    distribution_target_type coefficient_distribution_target,
+    coefficient_distribution_target_type coefficient_distribution_target,
     distribution_target_type cost_model_target) {
   typedef double NT;
   typedef Cartesian<NT> Kernel;
@@ -374,12 +379,78 @@ double *hmc_runtime_data_interface(
 
   // Define functors for the negative log pdf and the gradient of the (positive)
   // log pdf
-  typedef HMCFunctor_probability_distribution_interface::FunctionFunctor<Point>
+  typedef HMCFunctor_probability_distribution_interface<
+      probability_distribution_statistical_aara>::FunctionFunctor<Point>
       NegativeLogPDFFunctor;
-  typedef HMCFunctor_probability_distribution_interface::GradientFunctor<Point>
+  typedef HMCFunctor_probability_distribution_interface<
+      probability_distribution_statistical_aara>::GradientFunctor<Point>
       GradientFunctor;
-  HMCFunctor_probability_distribution_interface::parameters<NT> params(dim, L,
-                                                                       m);
+  HMCFunctor_probability_distribution_interface<
+      probability_distribution_statistical_aara>::parameters<NT>
+      params(dim, L, m);
+  NegativeLogPDFFunctor f(params, probability_distribution);
+  GradientFunctor F(params, probability_distribution);
+
+#ifdef DEBUG
+  // Test neg log pdf and positive log pdf's gradient at the starting point
+  Point x0(dim);
+  for (auto i = 0; i != dim; i++) {
+    x0.set_coord(i, starting_point[i]);
+  }
+
+  double log_pdf = probability_distribution.log_pdf_point_interface(x0);
+  Point gradient_log_pdf =
+      probability_distribution.gradient_log_pdf_point_interface(x0);
+  std::cout << "Log pdf at the starting point: " << log_pdf << std::endl;
+  std::cout << "Gradient of the log pdf at the starting point: "
+            << gradient_log_pdf.getCoefficients().transpose() << std::endl;
+#endif
+
+  return hmc_core<NegativeLogPDFFunctor, GradientFunctor>(
+      num_rows, num_cols, coefficients_A, coefficients_b, L, m,
+      num_samples_drawn, walk_length, step_size, starting_point, f, F);
+}
+
+double *hmc_cost_data_categorized_by_sizes(
+    int const num_rows, int const num_cols, double *coefficients_A,
+    double *coefficients_b, double const L, double const m,
+    int const num_samples_drawn, int const walk_length, double const step_size,
+    double *starting_point, int *array_sizes_of_categories, double *array_costs,
+    distribution_type cost_model) {
+  typedef double NT;
+  typedef Cartesian<NT> Kernel;
+  typedef typename Kernel::Point Point;
+
+  int dim = num_cols;
+
+#ifdef DEBUG
+  std::cout << "Coefficient distribution: ";
+  print_distribution(coefficient_distribution);
+  std::cout << std::endl;
+  std::cout << "Cost model: ";
+  print_distribution(cost_model);
+  std::cout << std::endl;
+#endif
+
+  // The number of size categories in cost data is given by the number of
+  // columns in matrix A.
+  probability_distribution_cost_data_categorized_by_sizes
+      probability_distribution{num_cols, array_sizes_of_categories, array_costs,
+                               cost_model};
+
+  // Define functors for the negative log pdf and the gradient of the (positive)
+  // log pdf
+  typedef HMCFunctor_probability_distribution_interface<
+      probability_distribution_cost_data_categorized_by_sizes>::
+      FunctionFunctor<Point>
+          NegativeLogPDFFunctor;
+  typedef HMCFunctor_probability_distribution_interface<
+      probability_distribution_cost_data_categorized_by_sizes>::
+      GradientFunctor<Point>
+          GradientFunctor;
+  HMCFunctor_probability_distribution_interface<
+      probability_distribution_cost_data_categorized_by_sizes>::parameters<NT>
+      params(dim, L, m);
   NegativeLogPDFFunctor f(params, probability_distribution);
   GradientFunctor F(params, probability_distribution);
 

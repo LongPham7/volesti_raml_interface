@@ -22,8 +22,15 @@ double *hmc_runtime_data_interface(
     double *starting_point, runtime_data_sample *runtime_data,
     int const num_samples_in_runtime_data,
     distribution_type coefficient_distribution, distribution_type cost_model,
-    distribution_target_type coefficient_distribution_target,
+    coefficient_distribution_target_type coefficient_distribution_target,
     distribution_target_type cost_model_target);
+
+double *hmc_cost_data_categorized_by_sizes(
+    int const num_rows, int const num_cols, double *coefficients_A,
+    double *coefficients_b, double const L, double const m,
+    int const num_samples_drawn, int const walk_length, double const step_size,
+    double *starting_point, int *array_sizes_of_categories, double *array_costs,
+    distribution_type cost_model);
 
 #ifdef __cplusplus
 }

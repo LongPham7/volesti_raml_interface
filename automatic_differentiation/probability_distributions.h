@@ -9,9 +9,16 @@ extern "C" {
 #endif
 
 enum distribution_name { Weibull, Gumbel, Gaussian };
+
 enum distribution_target_type {
   Individual_coefficients,
   Average_of_coefficients
+};
+
+struct coefficient_distribution_target_type {
+  int* selected_coefficients;
+  int num_selected_coefficients;
+  distribution_target_type target_type;
 };
 
 struct distribution_type {

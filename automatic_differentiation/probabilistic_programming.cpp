@@ -17,7 +17,7 @@ probability_distribution_statistical_aara::
         runtime_data_sample *runtime_data_, int num_samples_, int dim_,
         distribution_type coefficient_distribution_,
         distribution_type cost_model_,
-        distribution_target_type coefficient_distribution_target_,
+        coefficient_distribution_target_type coefficient_distribution_target_,
         distribution_target_type cost_model_target_)
     : runtime_data(runtime_data_),
       num_samples(num_samples_),
@@ -34,9 +34,20 @@ coefficients' log pdf. */
 var probability_distribution_statistical_aara::coefficient_log_pdf_individual(
     const ArrayXvar &x) {
   var cumulative_log_pdf = 0;
-  for (auto i = 0; i != dim; i++) {
-    cumulative_log_pdf +=
-        log_pdf_of_given_distribution(coefficient_distribution, x[i]);
+
+  if (coefficient_distribution_target.num_selected_coefficients == -1) {
+    for (auto i = 0; i != dim; i++) {
+      cumulative_log_pdf +=
+          log_pdf_of_given_distribution(coefficient_distribution, x[i]);
+    }
+  } else {
+    for (auto i = 0;
+         i != coefficient_distribution_target.num_selected_coefficients; i++) {
+      int coefficient_index =
+          coefficient_distribution_target.selected_coefficients[i];
+      cumulative_log_pdf += log_pdf_of_given_distribution(
+          coefficient_distribution, x[coefficient_index]);
+    }
   }
   return cumulative_log_pdf;
 }
@@ -141,9 +152,10 @@ var probability_distribution_statistical_aara::cost_gap_log_pdf_average(
 var probability_distribution_statistical_aara::log_pdf(const ArrayXvar &x) {
   // assert(x.rows() == dim);
   var coefficient_log_pdf;
-  if (coefficient_distribution_target == Individual_coefficients) {
+  if (coefficient_distribution_target.target_type == Individual_coefficients) {
     coefficient_log_pdf = coefficient_log_pdf_individual(x);
-  } else if (coefficient_distribution_target == Average_of_coefficients) {
+  } else if (coefficient_distribution_target.target_type ==
+             Average_of_coefficients) {
     coefficient_log_pdf = coefficient_log_pdf_average(x);
   } else {
     std::invalid_argument(
@@ -189,10 +201,12 @@ void test_automatic_differentiation() {
       create_runtime_data_for_testing();
   distribution_type coefficient_distribution{Gaussian, 0, 0.2};
   distribution_type cost_model{Weibull, 1, 6};
+  coefficient_distribution_target_type coefficient_distribution_target{
+      nullptr, -1, Individual_coefficients};
   probability_distribution_statistical_aara
       probability_distribution_for_testing{
           runtime_data_for_testing, 5,          3,
-          coefficient_distribution, cost_model, Individual_coefficients,
+          coefficient_distribution, cost_model, coefficient_distribution_target,
           Individual_coefficients};
 
   ArrayXvar x(3);
@@ -202,4 +216,51 @@ void test_automatic_differentiation() {
       probability_distribution_for_testing.gradient_log_pdf(x);
   std::cout << "Log pdf for testing: " << y << std::endl;
   std::cout << "Log pdf's gradient for testing:\n" << dydx << std::endl;
+}
+
+probability_distribution_cost_data_categorized_by_sizes::
+    probability_distribution_cost_data_categorized_by_sizes(
+        int num_size_categories_, int *array_sizes_of_categories_,
+        double *array_costs_, distribution_type cost_model_)
+    : num_size_categories(num_size_categories_),
+      array_sizes_of_categories(array_sizes_of_categories_),
+      array_costs(array_costs_),
+      cost_model(cost_model_) {}
+
+var probability_distribution_cost_data_categorized_by_sizes::log_pdf(
+    const ArrayXvar &x) {
+  var cumulative_log_pdf = 0;
+  int cumulative_index = 0;
+  for (auto i = 0; i < num_size_categories; i++) {
+    for (auto j = 0; j < array_sizes_of_categories[i]; j++) {
+      double cost = array_costs[cumulative_index];
+      cumulative_index++;
+      cumulative_log_pdf +=
+          log_pdf_of_given_distribution(cost_model, x[i] - cost);
+    }
+  }
+
+  return cumulative_log_pdf;
+}
+
+double probability_distribution_cost_data_categorized_by_sizes::
+    log_pdf_point_interface(const Point &point_x) {
+  ArrayXvar x{point_x.getCoefficients()};
+  var y = log_pdf(x);
+  return (double)y;
+}
+
+Eigen::VectorXd
+probability_distribution_cost_data_categorized_by_sizes::gradient_log_pdf(
+    ArrayXvar x) {
+  var y = log_pdf(x);
+  return gradient(y, x);
+}
+
+Point probability_distribution_cost_data_categorized_by_sizes::
+    gradient_log_pdf_point_interface(Point point_x) {
+  ArrayXvar x{point_x.getCoefficients()};
+  Eigen::VectorXd dydx = gradient_log_pdf(x);
+  Point point_dydx{dydx};
+  return point_dydx;
 }
